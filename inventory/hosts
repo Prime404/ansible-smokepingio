@@ -1,0 +1,5 @@
+[smokeping-slave]
+yourhostsgoeshere
+
+[smokeping-master]
+yourmastergoeshere

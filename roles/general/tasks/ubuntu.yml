@@ -1,0 +1,30 @@
+---
+- name: Updating the system
+  apt:
+    name: "*"
+    state: latest
+
+- name:  Install tool for monitoring bandwidth usage
+  apt:
+    name: vnstat
+    state: present
+
+- name: Enable the vnstat service
+  systemd:
+    name: vnstat
+    enabled: yes
+    state: started
+
+- name: Install useful packages
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - whois
+    - mtr
+    - ufw
+
+- name: Enable the UFW firewall
+  ufw:
+    state: enabled

@@ -1,0 +1,16 @@
+---
+- hosts: smokeping-slave
+  remote_user: root
+
+# Here we list any roles to run
+  tasks:
+    - include_role:
+        name: general
+    - include_role:
+        name: smokeping
+
+  # Handlers for use by roles
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes

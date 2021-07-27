@@ -1,0 +1,42 @@
+---
+# Update the system
+- name: Updating the system
+  yum:
+    name: "*"
+    state: latest
+
+# Install epel-release
+- name: Party like it's epel release
+  yum:
+    name: epel-release
+    state: latest
+
+# Install tool for monitoring traffic usage
+- name: Install tool for monitoring bandwidth usage
+  yum:
+    name: vnstat
+    state: present
+
+# Enable service for bandwidth usage monitoring
+- name: Enable the vnstat service
+  systemd:
+    name: vnstat
+    enabled: yes
+    state: started
+
+- name: Install useful packages
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - whois
+    - mtr
+    - bind-utils
+    - firewalld
+
+- name: Enable and start the firewalld service
+  systemd:
+    name: firewalld
+    enabled: yes
+    state: started

@@ -1,0 +1,4 @@
+---
+is_master: true
+use_nginx: true
+enable_letsencrypt: true

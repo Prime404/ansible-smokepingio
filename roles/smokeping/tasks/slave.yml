@@ -1,0 +1,78 @@
+---
+- name: Is slave
+  ansible.builtin.debug:
+    msg:
+    - "Node is set to slave"
+
+- name: Create directories to store the application data within
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0775
+  loop:
+    - /opt/smokeping/bin
+    - /opt/smokeping/conf
+    - /opt/smokeping/log
+
+- name: Copy the application executable file
+  copy:
+    src: files/slave/bin/smokeping-slave
+    dest: /opt/smokeping/bin/smokeping-slave
+    owner: root
+    group: root
+    mode: '0754'
+
+- name: Copy base configuration if it does not exist already
+  copy:
+    src: files/slave/conf/smokeping_slave.conf
+    dest: /opt/smokeping/conf/smokeping_slave.conf
+    owner: root
+    group: root
+    mode: '0600'
+    force: no
+
+- name: Adding managed systemd unit for the smokeping slave
+  blockinfile:
+    path:  /etc/systemd/system/smokeping-slave.service
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    backup: yes
+    create: yes
+    block: |
+      [Unit]
+      Description=Smokeping slave daemon
+      After=network.target
+      After=local-fs.target
+      After=remote-fs.target
+
+      [Service]
+      ExecStart=/opt/smokeping/bin/smokeping-slave --config /opt/smokeping/conf/smokeping_slave.conf
+
+      [Install]
+      WantedBy=multi-user.target
+  notify:
+  - Reload systemd
+
+- name: Enabling and starting the service
+  systemd:
+    name: smokeping-slave
+    enabled: yes
+    state: started
+
+- name: Open port in the firewall for monitoring
+  firewalld:
+    rich_rule: rule family="ipv4" source address={{ master_ip }} port protocol="tcp" port="4456" accept
+    zone: public
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: ansible_distribution == "CentOS" and master_ip is defined
+
+- name: Open port in the firewall for monitoring
+  ufw:
+    rule: allow
+    proto: tcp
+    dest: "{{ master_ip }}"
+    port: 4456
+  when: ansible_distribution == "Ubuntu" and master_ip is defined
